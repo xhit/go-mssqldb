@@ -29,7 +29,11 @@ func TestBulkcopy(t *testing.T) {
 	uid := []byte{0x6F, 0x96, 0x19, 0xFF, 0x8B, 0x86, 0xD0, 0x11, 0xB4, 0x2D, 0x00, 0xC0, 0x4F, 0xC9, 0x64, 0xFF}
 	testValues := []testValue{
 		{"test_nvarchar", "ab©ĎéⒻghïjklmnopqЯ☀tuvwxyz", nil},
+		{"test_nvarchar_max", "ab©ĎéⒻghïjklmnopqЯ☀tuvwxyz", nil},
+		{"test_nvarchar_max_nil", nil, nil},
 		{"test_varchar", "abcdefg", nil},
+		{"test_varchar_max", "abcdefg", nil},
+		{"test_varchar_max_nil", nil, nil},
 		{"test_char", "abcdefg   ", nil},
 		{"test_nchar", "abcdefg   ", nil},
 		{"test_text", "abcdefg", nil},
@@ -110,6 +114,10 @@ func TestBulkcopy(t *testing.T) {
 	t.Log("Preparing copy in statement")
 
 	stmt, err := conn.PrepareContext(ctx, CopyIn(tableName, BulkOptions{}, columns...))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer stmt.Close()
 
 	for i := 0; i < 10; i++ {
 		t.Logf("Executing copy in statement %d time with %d values", i+1, len(values))
@@ -133,6 +141,9 @@ func TestBulkcopy(t *testing.T) {
 	//check that all rows are present
 	var rowCount int
 	err = conn.QueryRowContext(ctx, "select count(*) c from "+tableName).Scan(&rowCount)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if rowCount != 10 {
 		t.Errorf("unexpected row count %d", rowCount)
@@ -148,7 +159,7 @@ func TestBulkcopy(t *testing.T) {
 
 		ptrs := make([]interface{}, len(columns))
 		container := make([]interface{}, len(columns))
-		for i, _ := range ptrs {
+		for i := range ptrs {
 			ptrs[i] = &container[i]
 		}
 		if err := rows.Scan(ptrs...); err != nil {
@@ -207,9 +218,11 @@ func setupTable(ctx context.Context, t *testing.T, conn *sql.Conn, tableName str
 	[test_nvarchar] [nvarchar](50) NULL,
 	[test_nvarchar_4000] [nvarchar](4000) NULL,
 	[test_nvarchar_max] [nvarchar](max) NULL,
+	[test_nvarchar_max_nil] [nvarchar](max) NULL,
 	[test_varchar] [varchar](50) NULL,
 	[test_varchar_8000] [varchar](8000) NULL,
 	[test_varchar_max] [varchar](max) NULL,
+	[test_varchar_max_nil] [varchar](max) NULL,
 	[test_char] [char](10) NULL,
 	[test_nchar] [nchar](10) NULL,
 	[test_text] [text] NULL,
