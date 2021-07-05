@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -377,6 +378,8 @@ func (b *Bulk) makeParam(val DataValue, col columnStruct) (res param, err error)
 		switch val := val.(type) {
 		case string:
 			res.buffer = str2ucs2(val)
+		case int64:
+			res.buffer = []byte(strconv.FormatInt(val, 10))
 		case []byte:
 			res.buffer = val
 		default:
@@ -400,6 +403,8 @@ func (b *Bulk) makeParam(val DataValue, col columnStruct) (res param, err error)
 			res.buffer = vb
 		case []byte:
 			res.buffer = val
+		case int64:
+			res.buffer = []byte(strconv.FormatInt(val, 10))
 		default:
 			err = fmt.Errorf("mssql: invalid type for varchar column: %T %s", val, val)
 			return
