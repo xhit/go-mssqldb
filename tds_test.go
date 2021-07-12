@@ -13,7 +13,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/denisenkom/go-mssqldb/msdsn"
+	"github.com/xhit/go-mssqldb/msdsn"
 )
 
 type MockTransport struct {
